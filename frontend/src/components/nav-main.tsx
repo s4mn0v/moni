@@ -1,3 +1,4 @@
+import { Link } from "react-router"
 import { IconTrophy, type Icon } from "@tabler/icons-react"
 
 import {
@@ -22,13 +23,15 @@ export function NavMain({
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
           <SidebarMenuItem className="flex items-center gap-2">
-            <SidebarMenuButton
-              tooltip="Levels"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear uppercase tracking-widest font-extrabold"
-            >
-              <IconTrophy strokeWidth={2} className="size-5!"/>
-              <span>Level</span>
-            </SidebarMenuButton>
+            <Link to="/levels">
+              <SidebarMenuButton
+                tooltip="Levels"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear uppercase tracking-widest font-extrabold"
+              >
+                <IconTrophy strokeWidth={2} className="size-5!" />
+                <span>Level</span>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>
