@@ -1,11 +1,10 @@
 import * as React from "react"
 import {
-  IconChartBar,
   IconDashboard,
-  IconFolder,
+  IconActivity,
   IconCoin,
-  IconListDetails,
-  IconUsers,
+  IconSettings,
+  IconGift
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -32,25 +31,20 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "Kill It",
+      title: "Actions",
       url: "/actions",
-      icon: IconListDetails,
+      icon: IconActivity,
     },
     {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
+      title: "Rewards",
+      url: "/rewards",
+      icon: IconGift,
     },
     {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
+      title: "Settings",
+      url: "/settings",
+      icon: IconSettings,
+    }
   ]
 }
 
