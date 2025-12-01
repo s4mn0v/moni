@@ -59,7 +59,7 @@ export function NavMenu() {
                     <Link to="/">
                       <div className="flex flex-row gap-4 items-center uppercase w-full">
                         <IconChartHistogram className="text-white" size={20} />
-                        Graphicsaaaaa
+                        Graphics
                       </div>
                     </Link>
                   </NavigationMenuLink>
@@ -79,6 +79,25 @@ export function NavMenu() {
                       <div className="flex flex-row gap-4 items-center uppercase w-full">
                         <IconDirectionArrows className="text-white" size={20} />
                         Actions
+                      </div>
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+
+                {/* TEST */}
+                <NavigationMenuItem>
+                  <NavigationMenuLink
+                    asChild
+                    className={`
+                      ${navigationMenuTriggerStyle()} 
+                      flex items-center gap-3 w-full
+                      ${isActive("/test") ? "bg-neutral-800 text-white" : "opacity-70 hover:opacity-100"}
+                    `}
+                  >
+                    <Link to="/test">
+                      <div className="flex flex-row gap-4 items-center uppercase w-full">
+                        <IconDirectionArrows className="text-white" size={20} />
+                        Test
                       </div>
                     </Link>
                   </NavigationMenuLink>
