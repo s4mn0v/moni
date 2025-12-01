@@ -1,23 +1,27 @@
-import { SidebarProvider, Sidebar } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { SiteHeader } from "@/components/site-header"
 import { Outlet } from "react-router"
+import { NavMenu } from "@/components/navigation/NavMenu"
+import { Footer } from "@/components/navigation/Footer"
 
 export default function Dashboard() {
   return (
-    <SidebarProvider>
-      <div className="flex w-full min-h-screen">
-        <Sidebar>
-          <AppSidebar />
-        </Sidebar>
+    <div className="min-h-screen flex flex-col bg-background">
 
-        <div className="flex flex-col flex-1 justify-between">
-          <div className="p-6 space-y-6">
-            <Outlet />
-          </div>
-          <SiteHeader />
-        </div>
+      {/* Header fijo */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <NavMenu />
       </div>
-    </SidebarProvider>
+
+      {/* Contenedor principal desplazado hacia abajo */}
+      <div className="flex flex-col flex-1 pt-16"> 
+        {/* Ajusta este valor según altura real del NavMenu */}
+
+        <div className="p-6 space-y-6 flex-1 scroll-left">
+          <Outlet />
+        </div>
+
+        <Footer />
+      </div>
+
+    </div>
   )
 }
