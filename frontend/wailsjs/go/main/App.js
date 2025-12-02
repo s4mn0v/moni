@@ -13,7 +13,3 @@ export function OnWsMessage(arg1) {
 export function StartBTCPriceWS() {
   return window['go']['main']['App']['StartBTCPriceWS']();
 }
-
-export function StopBTCPriceWS() {
-  return window['go']['main']['App']['StopBTCPriceWS']();
-}

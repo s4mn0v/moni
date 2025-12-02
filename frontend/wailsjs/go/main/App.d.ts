@@ -6,5 +6,3 @@ export function OnWsError(arg1:string):Promise<void>;
 export function OnWsMessage(arg1:string):Promise<void>;
 
 export function StartBTCPriceWS():Promise<void>;
-
-export function StopBTCPriceWS():Promise<void>;

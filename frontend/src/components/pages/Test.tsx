@@ -1,89 +1,45 @@
-import { useEffect, useRef, useState } from "react";
-import { StartBTCPriceWS, StopBTCPriceWS } from "../../../wailsjs/go/main/App";
+import { useEffect, useState, useRef } from "react";
 import { EventsOn, EventsOff } from "../../../wailsjs/runtime/runtime";
 
-const THROTTLE_MS = 100;
-
 export default function Test() {
-  const [price, setPrice] = useState<string>("---");
-  const [connected, setConnected] = useState<boolean>(false);
+  const [price, setPrice] = useState<string>("Conectando...");
 
-  // último timestamp de actualización al state
-  const lastUpdateRef = useRef<number>(0);
-  // último valor recibido (sin provocar render)
-  const lastReceivedRef = useRef<string | null>(null);
-  // timer fallback (por si quieres asegurar actualizaciones periódicas)
-  const flushTimerRef = useRef<number | null>(null);
+  const lastPriceRef = useRef<string | null>(null);
+  const throttleRef = useRef<boolean>(false);
 
   useEffect(() => {
-    // Listener: recibe eventos inmediatamente y guarda el valor en lastReceivedRef
-    const handler = (data: any) => {
-      // normaliza y extrae el precio (ajusta según tu payload)
-      const p =
+    EventsOn("ticker_btc", (data: any) => {
+      const last =
         data?.data?.[0]?.lastPr ??
-        data?.data?.lastPr ??
         data?.data?.[0]?.last ??
-        data?.data?.last ??
-        data?.lastPr ??
         data?.last ??
         null;
 
-      if (!p && p !== 0) return;
+      if (!last) return;
 
-      lastReceivedRef.current = String(p);
+      lastPriceRef.current = last.toString();
 
-      const now = Date.now();
-      const lastUpdate = lastUpdateRef.current;
+      if (!throttleRef.current) {
+        throttleRef.current = true;
 
-      // Si ya pasó THROTTLE_MS desde la última actualización, aplicamos inmediatamente
-      if (now - lastUpdate >= THROTTLE_MS) {
-        lastUpdateRef.current = now;
-        setPrice(String(p));
-        // opcional: cancelar timer si había uno
-        if (flushTimerRef.current) {
-          window.clearTimeout(flushTimerRef.current);
-          flushTimerRef.current = null;
-        }
-      } else {
-        // Si no tocamos state ahora, programamos un flush para cuando termine el intervalo
-        if (!flushTimerRef.current) {
-          const wait = THROTTLE_MS - (now - lastUpdate);
-          flushTimerRef.current = window.setTimeout(() => {
-            flushTimerRef.current = null;
-            const val = lastReceivedRef.current;
-            if (val !== null) {
-              lastUpdateRef.current = Date.now();
-              setPrice(val);
-            }
-          }, wait);
-        }
+        setTimeout(() => {
+          if (lastPriceRef.current) {
+            setPrice(lastPriceRef.current);
+          }
+          throttleRef.current = false;
+        }, 200);
       }
-    };
+    });
 
-    // Registrar y devolver desregistrar
-    EventsOn("ticker_btc", handler);
+    EventsOn("ticker_btc_error", (err) => {
+      console.error("WS Error:", err);
+    });
 
     return () => {
       EventsOff("ticker_btc");
-      if (flushTimerRef.current) {
-        window.clearTimeout(flushTimerRef.current);
-        flushTimerRef.current = null;
-      }
+      EventsOff("ticker_btc_error");
     };
-  }, []); // dependencias vacías para montar una vez
-
-  const handleConnect = async () => {
-    await StartBTCPriceWS();
-    setConnected(true);
-  };
-
-  const handleDisconnect = async () => {
-    await StopBTCPriceWS();
-    setConnected(false);
-    setPrice("---");
-    lastReceivedRef.current = null;
-    lastUpdateRef.current = 0;
-  };
+  }, []);
 
   return (
     <div className="p-6 bg-gray-900 text-white rounded-xl shadow-lg max-w-sm mx-auto">
@@ -92,16 +48,6 @@ export default function Test() {
       <div className="text-center text-5xl font-mono mb-6">
         {price}
       </div>
-
-      {!connected ? (
-        <button onClick={handleConnect} className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-semibold">
-          Conectar
-        </button>
-      ) : (
-        <button onClick={handleDisconnect} className="w-full bg-red-600 hover:bg-red-700 py-3 rounded-lg font-semibold">
-          Desconectar
-        </button>
-      )}
     </div>
   );
 }

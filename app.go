@@ -1,67 +1,64 @@
 package main
 
 import (
-    "context"
-    "encoding/json"
-    "fmt"
+	"context"
+	"encoding/json"
+	"fmt"
 
-    "github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 
-    "bitget/internal/model"
-    "bitget/pkg/client/ws"
+	"bitget/internal/model"
+	"bitget/logging/applogger"
+	"bitget/pkg/client/ws"
 )
 
 type App struct {
-    ctx context.Context
-    ws  *ws.BitgetWsClient
+	ctx context.Context
+	ws  *ws.BitgetWsClient
 }
 
 func NewApp() *App {
-    return &App{}
+	return &App{}
 }
 
 func (a *App) Startup(ctx context.Context) {
-    a.ctx = ctx
+	a.ctx = ctx
+
+	// Arranca automáticamente
+	go func() {
+		err := a.StartBTCPriceWS()
+		if err != nil {
+			applogger.Error("Failed to auto-start WS: %v", err)
+		}
+	}()
 }
 
-// HANDLER: recibe mensajes del WS y los envía al frontend
 func (a *App) OnWsMessage(msg string) {
-    var data map[string]interface{}
-    _ = json.Unmarshal([]byte(msg), &data)
+	var data map[string]interface{}
+	_ = json.Unmarshal([]byte(msg), &data)
 
-    // Emitimos el evento al frontend
-    runtime.EventsEmit(a.ctx, "ticker_btc", data)
+	runtime.EventsEmit(a.ctx, "ticker_btc", data)
 }
 
-// HANDLER: errores del WS
 func (a *App) OnWsError(msg string) {
-    runtime.EventsEmit(a.ctx, "ticker_btc_error", msg)
+	runtime.EventsEmit(a.ctx, "ticker_btc_error", msg)
 }
 
-// Start WS
-func (a *App) StartBTCPriceWS() {
-    if a.ws != nil {
-        fmt.Println("WS ya está conectado")
-        return
-    }
+func (a *App) StartBTCPriceWS() error {
+	if a.ws != nil {
+		fmt.Println("WS ya está conectado")
+		return nil
+	}
 
-    a.ws = new(ws.BitgetWsClient).Init(false, a.OnWsMessage, a.OnWsError)
+	a.ws = new(ws.BitgetWsClient).Init(false, a.OnWsMessage, a.OnWsError)
 
-    a.ws.SubscribeDef([]model.SubscribeReq{
-        {
-            InstType: "USDT-FUTURES",
-            Channel:  "ticker",
-            InstId:   "BTCUSDT",
-        },
-    })
-}
+	a.ws.SubscribeDef([]model.SubscribeReq{
+		{
+			InstType: "USDT-FUTURES",
+			Channel:  "ticker",
+			InstId:   "BTCUSDT",
+		},
+	})
 
-// Stop WS
-func (a *App) StopBTCPriceWS() {
-    if a.ws == nil {
-        return
-    }
-
-    a.ws.Close()
-    a.ws = nil
+	return nil
 }
