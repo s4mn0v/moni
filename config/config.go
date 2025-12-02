@@ -4,7 +4,7 @@ import "bitget/constants"
 
 const (
 	BaseUrl = "https://api.bitget.com"
-	WsUrl   = "wss://ws.bitget.com/mix/v1/stream"
+	WsUrl   = "wss://ws.bitget.com/v2/ws/public"
 
 	ApiKey        = ""
 	SecretKey     = ""

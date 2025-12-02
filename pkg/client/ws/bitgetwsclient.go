@@ -78,11 +78,7 @@ func toUpperReq(req model.SubscribeReq) model.SubscribeReq {
 	req.InstType = strings.ToUpper(req.InstType)
 	req.InstId = strings.ToUpper(req.InstId)
 	req.Channel = strings.ToLower(req.Channel)
-	if "" == req.Coin {
-		req.Coin = strings.ToLower(req.InstId)
-	}
 	return req
-
 }
 
 func (p *BitgetWsClient) Subscribe(list []model.SubscribeReq, listener common.OnReceive) {
@@ -111,4 +107,10 @@ func (p *BitgetWsClient) SendMessage(msg string) {
 
 func (p *BitgetWsClient) SendMessageByType(req model.WsBaseReq) {
 	p.bitgetBaseWsClient.SendByType(req)
+}
+
+func (p *BitgetWsClient) Close() {
+	if p.bitgetBaseWsClient != nil {
+		p.bitgetBaseWsClient.Close()
+	}
 }

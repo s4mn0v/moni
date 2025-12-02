@@ -26,6 +26,19 @@ type BitgetBaseWsClient struct {
 	AllSuribe        *model.Set
 	Signer           *Signer
 	ScribeMap        map[model.SubscribeReq]OnReceive
+	isClosed          bool
+}
+
+func (p *BitgetBaseWsClient) Close() {
+	p.isClosed = true
+
+	if p.WebSocketClient != nil {
+		_ = p.WebSocketClient.Close()
+	}
+
+	if p.Ticker != nil {
+		p.Ticker.Stop()
+	}
 }
 
 func (p *BitgetBaseWsClient) Init() *BitgetBaseWsClient {
@@ -96,6 +109,9 @@ func (p *BitgetBaseWsClient) ExecuterPing() {
 	c.Start()
 }
 func (p *BitgetBaseWsClient) ping() {
+	if p.isClosed {
+		return
+	}
 	p.Send("ping")
 }
 
@@ -121,7 +137,7 @@ func (p *BitgetBaseWsClient) Send(data string) {
 func (p *BitgetBaseWsClient) tickerLoop() {
 	applogger.Info("tickerLoop started")
 	for range p.Ticker.C {
-		elapsedSecond := time.Now().Sub(p.LastReceivedTime).Seconds()
+		elapsedSecond := time.Since(p.LastReceivedTime).Seconds()
 
 		if elapsedSecond > constants.ReconnectWaitSecond {
 			applogger.Info("WebSocket reconnect...")
@@ -147,53 +163,75 @@ func (p *BitgetBaseWsClient) disconnectWebSocket() {
 }
 
 func (p *BitgetBaseWsClient) ReadLoop() {
+
+	// Evita que un panic tumbe la app
+	defer func() {
+		if r := recover(); r != nil {
+			applogger.Error("Recovered from WS panic: %v", r)
+		}
+	}()
+
 	for {
+		if p.isClosed {
+			applogger.Info("ReadLoop stopped: client closed")
+			return
+		}
 
 		if p.WebSocketClient == nil {
-			applogger.Info("Read error: no connection available")
-			//time.Sleep(TimerIntervalSecond * time.Second)
+			applogger.Info("ReadLoop: WebSocketClient is nil, exiting read loop")
+			return
+		}
+
+		// ---- INTENTA LEER UN MENSAJE ----
+		_, buf, err := p.WebSocketClient.ReadMessage()
+		if err != nil {
+			applogger.Info("ReadLoop: WebSocket read error: %s", err)
+
+			if p.isClosed {
+				return // termina sin spamear errores
+			}
+
 			continue
 		}
 
-		_, buf, err := p.WebSocketClient.ReadMessage()
-		if err != nil {
-			applogger.Info("Read error: %s", err)
-			continue
-		}
 		p.LastReceivedTime = time.Now()
 		message := string(buf)
 
 		applogger.Info("rev:" + message)
 
+		// ---- KEEP ALIVE ----
 		if message == "pong" {
-			applogger.Info("Keep connected:" + message)
+			applogger.Info("Keep connected: pong")
 			continue
 		}
+
 		jsonMap := internal.JSONToMap(message)
 
-		v, e := jsonMap["code"]
-
-		if e && int(v.(float64)) != 0 {
-			p.ErrorListener(message)
-			continue
+		// ---- ERRORES DEL SERVIDOR ----
+		if v, ok := jsonMap["code"]; ok {
+			if int(v.(float64)) != 0 {
+				p.ErrorListener(message)
+				continue
+			}
 		}
 
-		v, e = jsonMap["event"]
-		if e && v == "login" {
+		// ---- LOGIN WS ----
+		if v, ok := jsonMap["event"]; ok && v == "login" {
 			applogger.Info("login msg:" + message)
 			p.LoginStatus = true
 			continue
 		}
 
-		v, e = jsonMap["data"]
-		if e {
+		// ---- MENSAJE CON DATA ----
+		if _, ok := jsonMap["data"]; ok {
 			listener := p.GetListener(jsonMap["arg"])
 			listener(message)
 			continue
 		}
+
+		// ---- MENSAJE GENÉRICO ----
 		p.handleMessage(message)
 	}
-
 }
 
 func (p *BitgetBaseWsClient) GetListener(argJson interface{}) OnReceive {
