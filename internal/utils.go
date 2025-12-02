@@ -61,7 +61,7 @@ func BuildGetParams(params map[string]string) string {
 func SortParams(params map[string]string) string {
 	keys := make([]string, len(params))
 	i := 0
-	for k, _ := range params {
+	for k := range params {
 		keys[i] = k
 		i++
 	}

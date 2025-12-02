@@ -23,7 +23,7 @@ func (s *Set) Add(item inter) {
 }
 func (s *Set) Remove(item inter) {
 	s.Lock()
-	s.Unlock()
+	defer s.Unlock()
 	delete(s.m, item)
 }
 func (s *Set) Has(item inter) bool {
@@ -41,10 +41,7 @@ func (s *Set) Clear() {
 	s.m = map[inter]bool{}
 }
 func (s *Set) IsEmpty() bool {
-	if s.Len() == 0 {
-		return true
-	}
-	return false
+	return s.Len() == 0
 }
 func (s *Set) List() []inter {
 	s.RLock()
