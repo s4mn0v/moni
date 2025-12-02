@@ -24,3 +24,6 @@ When building your Wails application, you may want to exclude certain files or d
 
 
 find .   -path ./node_modules -prune -o   -path ./wails -prune -o -path ./wailsjs -prune -o  -path ./.dist -prune -o   -path ./public -prune -o -path ./.gitignore -prune -o -path ./package.json -prune -o -path ./package.json.md5 -prune -o -path ./pnpm-lock.yaml -prune -o -type f -print
+
+
+find .   -path ./frontend/node_modules -prune -o   -path ./frontend/wails -prune -o -path ./frontend/wailsjs -prune -o  -path ./frontend/.dist -prune -o   -path ./frontend/public -prune -o -path ./.gitignore -prune -o -path ./.git -prune -o -path ./build -prune -o -path ./package.json -prune -o -path ./frontend/package.json.md5 -prune -o -path ./frontend/pnpm-lock.yaml -prune -o -type f -print

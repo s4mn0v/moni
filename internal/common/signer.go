@@ -58,10 +58,17 @@ func RSASign(src []byte, priKey []byte, hash crypto.Hash) ([]byte, error) {
 
 	var pkixPrivateKey interface{}
 	var err error
-	if block.Type == "RSA PRIVATE KEY" {
+	switch block.Type {
+	case "RSA PRIVATE KEY":
 		pkixPrivateKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
-	} else if block.Type == "PRIVATE KEY" {
+		if err != nil {
+			return nil, err
+		}
+	case "PRIVATE KEY":
 		pkixPrivateKey, err = x509.ParsePKCS8PrivateKey(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	h := hash.New()
